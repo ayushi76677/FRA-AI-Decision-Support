@@ -1,0 +1,6 @@
+export default function EvidenceLedger({events=[]}){
+ const chronological=[...events].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+ return <section className="panel evidence-ledger"><div className="panel-head"><div><p className="eyebrow">EVIDENCE LEDGER</p><h2>Chronological audit record</h2><p className="muted">Append-only synthetic demo audit trail.</p></div><span className="tag">{chronological.length} events</span></div>
+ {chronological.length?chronological.map((event,index)=><article className="ledger-event" key={event.event_id||event.ledger_id}><div className="ledger-marker">{index+1}</div><div><h3>{event.event_type?.replaceAll('_',' ')}</h3><p className="muted">{event.timestamp?new Date(event.timestamp).toLocaleString():'Timestamp unavailable'} · {event.source||'Source unavailable'}</p><p>{event.description}</p><dl><dt>Actor / role</dt><dd>{event.actor||'Not recorded'}{event.role?` / ${event.role}`:''}</dd><dt>Provenance</dt><dd>{event.provenance||'Not recorded'}</dd>{event.related_id&&<><dt>Related record</dt><dd>{event.related_id}</dd></>}{event.evidence_reference&&<><dt>Evidence</dt><dd>{event.evidence_reference}</dd></>}</dl>{event.synthetic_demo!==false&&<span className="demo-label">SYNTHETIC DEMO DATA</span>}</div></article>):<p className="empty">No ledger events have been recorded.</p>}
+ </section>
+}

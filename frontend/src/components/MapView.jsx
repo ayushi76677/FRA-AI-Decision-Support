@@ -1,0 +1,22 @@
+import { useEffect, useMemo, useState } from 'react'
+import L from 'leaflet'
+import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+
+const palette={claim:'#2f855a',nearby:'#5b6ee1',forest:'#8b6b32',change:'#d97706',field:'#9b59b6',community:'#c0568d'}
+function FitClaim({ geometry }) { const map=useMap(); useEffect(()=>{ try { const bounds=L.geoJSON(geometry).getBounds(); if(bounds.isValid()) map.fitBounds(bounds,{padding:[24,24]}) } catch {} },[geometry,map]); return null }
+function popupContent(properties, onOpenCase) {
+ const root=L.DomUtil.create('div','map-popup'); const title=L.DomUtil.create('strong','',root); title.textContent=properties.claim_id||properties.name||'Spatial feature'; const details=L.DomUtil.create('div','popup-copy',root)
+ ;[['Type',properties.claim_type],['Status',properties.status],['Priority',properties.priority],['Area',properties.area_hectares!=null?`${properties.area_hectares} ha`:null],['Distance',properties.distance_m!=null?`${properties.distance_m} m`:null],['Overlap',properties.overlap_percentage!=null?`${properties.overlap_percentage}%`:null]].filter(([,value])=>value!=null).forEach(([label,value])=>{const row=L.DomUtil.create('div','',details);row.textContent=`${label}: ${value}`})
+ const label=L.DomUtil.create('small','',details); label.textContent=properties.data_label||'SYNTHETIC DEMO DATA'
+ if(properties.claim_id){const button=L.DomUtil.create('button','',root);button.type='button';button.textContent='Open Case';L.DomEvent.on(button,'click',event=>{L.DomEvent.stop(event);onOpenCase(properties.claim_id)})}
+ return root
+}
+function Layer({ data, color, onOpenCase }) { if(!data?.features?.length) return null; return <GeoJSON data={data} style={{color,weight:2,fillOpacity:.2}} onEachFeature={(feature,layer)=>layer.bindPopup(popupContent(feature.properties||{},onOpenCase))}/> }
+export default function MapView({ claim, spatial, onOpenCase, api }) {
+ const [layers,setLayers]=useState({}); const [error,setError]=useState('')
+ useEffect(()=>{ Promise.all(['claims','forest-boundary','change-alerts','field-verification','community-evidence','lulc'].map(name=>fetch(`${api}/api/map/${name}`).then(r=>r.ok?r.json():{features:[]}))).then(([claims,forest,change,field,community,lulc])=>setLayers({claims,forest,change,field,community,lulc})).catch(()=>setError('Spatial evidence could not be loaded.')) },[api])
+ const claimFeature=useMemo(()=>claim?.geometry?{type:'FeatureCollection',features:[{type:'Feature',geometry:claim.geometry,properties:claim}]}:{features:[]},[claim])
+ if(!claim?.geometry) return <div className="map-empty">Spatial geometry unavailable for this claim.</div>
+ return <div className="map-wrap">{error && <div className="error">{error}</div>}<MapContainer center={[22.17,80.28]} zoom={12} className="leaflet-map" scrollWheelZoom><TileLayer attribution="&copy; OpenStreetMap contributors" url={import.meta.env.VITE_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}/><FitClaim geometry={claim.geometry}/><LayersControl position="topright"><LayersControl.Overlay checked name="FRA Claim"><Layer data={claimFeature} color={palette.claim} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay name="Nearby Claims"><Layer data={layers.claims} color={palette.nearby} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay checked name="Forest Boundary"><Layer data={layers.forest} color={palette.forest} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay checked name="Possible Change Alerts"><Layer data={layers.change} color={palette.change} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay name="Field Verification"><Layer data={layers.field} color={palette.field} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay name="Community Evidence"><Layer data={layers.community} color={palette.community} onOpenCase={onOpenCase}/></LayersControl.Overlay><LayersControl.Overlay name="LULC"><Layer data={layers.lulc} color="#64748b" onOpenCase={onOpenCase}/></LayersControl.Overlay></LayersControl></MapContainer><div className="map-legend"><b>Map legend</b><span className="legend-claim">FRA Claim</span><span className="legend-nearby">Nearby Claim</span><span className="legend-forest">Forest Boundary</span><span className="legend-change">Possible Change</span><span>Field / Community layers shown when data exists</span></div></div>
+}
