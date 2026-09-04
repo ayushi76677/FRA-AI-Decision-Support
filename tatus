@@ -1,0 +1,9 @@
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/architecture.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'requirements.txt', LF will be replaced by CRLF the next time Git touches it
+ README.md            |  41 [32m++[m[31m----[m
+ app/main.py          | 383 [32m+++++++++++++++++++++++++++++++++[m[31m------------------[m
+ docs/architecture.md |   4 [32m+[m
+ requirements.txt     |   4 [32m+[m
+ 4 files changed, 272 insertions(+), 160 deletions(-)

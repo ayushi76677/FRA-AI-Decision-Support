@@ -1,0 +1,8 @@
+import { useEffect, useState } from 'react'
+import { getJson } from './api'
+export function PageTitle({ eyebrow, title, text }) { return <header className="page-title"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p className="muted">{text}</p></div><span className="demo-chip">SYNTHETIC DEMO</span></header> }
+export default function CasesPage({ api, onOpenCase }) {
+ const [claims,setClaims]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true)
+ useEffect(()=>{getJson(api,'/api/claims?page_size=100').then(data=>setClaims(data.items||[])).catch(()=>setError('Claims could not be loaded. Check that the local API service is running.')).finally(()=>setLoading(false))},[api])
+ return <main className="content-page"><PageTitle eyebrow="CASE REGISTER" title="Claims requiring evidence-led review" text="Synthetic demo records. Opening a case preserves its full evidence, review, and field-verification workflow."/>{error&&<div className="error">{error}</div>}<section className="panel"><div className="panel-head"><h2>Claims</h2><span className="tag">{loading?'Loading':`${claims.length} records`}</span></div>{!loading&&!claims.length?<p className="empty">No claims are available in the current data source.</p>:<div className="case-table">{claims.map(claim=><button key={claim.claim_id} onClick={()=>onOpenCase(claim.claim_id)}><strong>{claim.claim_id}</strong><span>{claim.village||'Village unavailable'} · {claim.district||'District unavailable'}</span><em>{claim.priority?.replaceAll('_',' ')||'No priority'}</em><b>Open case →</b></button>)}</div>}</section></main>
+}

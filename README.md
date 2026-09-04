@@ -1,40 +1,27 @@
-<<<<<<< HEAD
-# FRA Monitoring Decision Support API
+# FRA Evidence Ledger
 
-This backend provides read-only, state-level FRA monitoring data from the supplied CSV files. It uses deterministic rules only—no LLM and no predictive model.
+FastAPI decision-support backend for FRA evidence workflows. It uses deterministic rules only: no LLM, autonomous adjudication, legal conclusions, or claimed scientific accuracy.
 
-## Data
-
-- `data/fra_state_progress_2024.csv`: claims received and titles distributed up to 30 June 2024.
-- `data/fra_state_progress_2022.csv`: claims received and titles distributed up to 31 March 2022.
-- `data/states_land_use_pattern.csv`: state/UT land-use context, including forest area percentage.
-
-The source data is state-level. It does not contain district boundaries, claim dates, individual claim records, parcel IDs, land-record areas, or geometries. Therefore the API does not infer delayed claims or land-record mismatches.
-
-## Run
+## Run in demo mode
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python start.py
+$env:DATABASE_MODE='demo'
+uvicorn app.main:app --reload
 ```
 
-Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
+Open `http://127.0.0.1:8000/docs`.
 
-## Endpoints
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-- `GET /health`
-- `GET /api/v1/states?year=2024`
-- `GET /api/v1/states/{state_name}?year=2024`
-- `GET /api/v1/statistics/states?year=2024`
-- `GET /api/v1/anomalies?year=2024&minimum_pending_rate_percent=40`
-- `GET /api/v1/map/states?year=2024`
+The supplied CSVs remain immutable state aggregates. Demo mode contains 20 clearly synthetic, deterministic cases so case, map, evidence, ledger, review, workflow, field, community, sync, and analytics APIs can be exercised without credentials. It does not represent real claims, imagery, or verified observations.
 
-`/api/v1/anomalies` flags `HIGH_PENDING_CLAIMS` when the percentage of claims without distributed titles meets the supplied threshold. It returns a direct explanation and threshold for each finding.
+The original frontend is retained through `/api/v1` routes. Set `VITE_API_URL=http://127.0.0.1:8000` if required.
 
-For a district WebGIS view and the remaining FRA anomaly rules, add a dataset with: district/state codes, claim ID, submission and decision dates, claim status, claimed/approved area, parcel/land-record identifiers, and district geometries or a joinable district code.
-=======
-# FRA-AI-Decision-Support
-AI-powered platform for monitoring Forest Rights Act claims using GIS visualization, claim analytics, and anomaly detection. Identifies delayed claims, unusual patterns, and potential land-record mismatches to support faster investigation and informed decision-making.
->>>>>>> 7720b0e512a3ba885cc6c08726765f5339ad0388
+Satellite/change records are labelled `DEMO DATA` and indicate only possible land-cover change requiring human verification. Delay Genome is operational workflow analysis, not a legal-deadline determination. `DATABASE_MODE=postgres` is configured as an environment option, with `DATABASE_URL` reserved for a future PostGIS repository integration.
