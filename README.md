@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FRA Monitoring Decision Support API
 
 This backend provides read-only, state-level FRA monitoring data from the supplied CSV files. It uses deterministic rules only—no LLM and no predictive model.
@@ -33,3 +34,7 @@ Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
 `/api/v1/anomalies` flags `HIGH_PENDING_CLAIMS` when the percentage of claims without distributed titles meets the supplied threshold. It returns a direct explanation and threshold for each finding.
 
 For a district WebGIS view and the remaining FRA anomaly rules, add a dataset with: district/state codes, claim ID, submission and decision dates, claim status, claimed/approved area, parcel/land-record identifiers, and district geometries or a joinable district code.
+=======
+# FRA-AI-Decision-Support
+AI-powered platform for monitoring Forest Rights Act claims using GIS visualization, claim analytics, and anomaly detection. Identifies delayed claims, unusual patterns, and potential land-record mismatches to support faster investigation and informed decision-making.
+>>>>>>> 7720b0e512a3ba885cc6c08726765f5339ad0388
