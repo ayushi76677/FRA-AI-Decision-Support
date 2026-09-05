@@ -2,9 +2,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from .config import settings
 from .data_repository import PROGRESS_FILES, state_records
@@ -43,8 +45,12 @@ async def error(_:Request,e:HTTPException):
  message=str(e.detail)
  code='CLAIM_NOT_FOUND' if e.status_code==404 and message=='Claim not found' else ('NOT_FOUND' if e.status_code==404 else ('FORBIDDEN' if e.status_code==403 else 'VALIDATION_ERROR' if e.status_code==422 else 'REQUEST_ERROR'))
  return JSONResponse(status_code=e.status_code,content={'error':{'code':code,'message':message,'request_id':str(uuid4())}})
-@app.get('/',include_in_schema=False)
-def root(): return RedirectResponse('/docs')
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / 'frontend' / 'dist'
+
+@app.get('/', include_in_schema=False)
+def root():
+ if (FRONTEND_DIST / 'index.html').is_file(): return FileResponse(FRONTEND_DIST / 'index.html')
+ return RedirectResponse('/docs')
 @app.get('/health',tags=['Health'])
 def health(): return {'status':'ok','database':settings.database_mode,'version':'1.0.0','environment':settings.app_env,'data_years':sorted(PROGRESS_FILES),'demo_data':settings.database_mode=='demo'}
 
@@ -285,3 +291,8 @@ def sync_evidence(b:dict,x_role:str|None=Header(None)):
  cid=b.get('claim_id'); c=getc(cid); repo.sync_keys.add(key); payload=b.get('evidence',{}); now=datetime.now(timezone.utc).isoformat(); e={'evidence_id':str(uuid4()),'claim_id':cid,'evidence_type':payload.get('evidence_type','FIELD_OBSERVATION'),'title':payload.get('title','Offline evidence'),'description':payload.get('description',''),'source':'OFFLINE_SYNC','captured_at':b.get('captured_at',now),'uploaded_at':now,'location':b.get('GPS') or b.get('gps_location'),'visibility':payload.get('visibility','AUTHORIZED'),'verification_status':'UNVERIFIED','provenance_id':None,'metadata':{'local_id':b.get('local_id'),'device_reference':b.get('device_reference'),'sync_attempt':b.get('sync_attempt')}}; c['evidence'].append(e); repo.append_ledger(cid,{'event_type':'offline evidence sync','actor':actor(x_role),'evidence_reference':e['evidence_id'],'description':'Offline evidence synchronized.','provenance_reference':None}); return {'status':'SYNCED','local_id':b.get('local_id'),'evidence_id':e['evidence_id']}
 @app.post('/api/sync/batch',tags=['Sync'])
 def sync_batch(b:list[dict],x_role:str|None=Header(None)): return {'results':[sync_evidence(x,x_role) for x in b]}
+
+# The desktop launcher serves the production dashboard from the same local
+# address as the API. API routes above are registered first and retain priority.
+if (FRONTEND_DIST / 'assets').is_dir():
+ app.mount('/assets', StaticFiles(directory=FRONTEND_DIST / 'assets'), name='frontend-assets')

@@ -14,11 +14,26 @@ class DemoRepository:
         self.claims={}; self.audit=[]; self.sync_keys=set()
         # Clearly synthetic boundary used solely for the local GIS demonstration.
         self.forest_boundary={"type":"Polygon","coordinates":[[[80.262,22.162],[80.296,22.162],[80.296,22.196],[80.262,22.196],[80.262,22.162]]],"data_label":"DEMO DATA","name":"Synthetic forest-boundary demonstration"}
-        states=["Madhya Pradesh","Chhattisgarh","Odisha","Maharashtra","Jharkhand"]
+        # India-wide synthetic locations make the global evidence-map overview
+        # demonstrably multi-case; they are not real claims or boundaries.
+        locations=[
+            ("Assam", "Kamrup Metropolitan", "Demo Village Assam", 91.73, 26.14),
+            ("Madhya Pradesh", "Jabalpur", "Demo Village Jabalpur", 79.95, 23.18),
+            ("Rajasthan", "Udaipur", "Demo Village Udaipur", 73.68, 24.58),
+            ("Maharashtra", "Nagpur", "Demo Village Nagpur", 79.09, 21.15),
+            ("Odisha", "Khordha", "Demo Village Odisha", 85.82, 20.29),
+            ("Karnataka", "Mysuru", "Demo Village Mysuru", 76.64, 12.29),
+            ("Gujarat", "Ahmedabad", "Demo Village Gujarat", 72.58, 23.03),
+            ("Uttar Pradesh", "Lucknow", "Demo Village Lucknow", 80.95, 26.85),
+            ("Jharkhand", "Ranchi", "Demo Village Ranchi", 85.31, 23.34),
+            ("Chhattisgarh", "Raipur", "Demo Village Raipur", 81.63, 21.25),
+        ]
         statuses=["PENDING","UNDER_REVIEW","FIELD_VERIFICATION","COMMUNITY_REVIEW","VERIFIED","COMPLETED"]
         for n in range(1, 21):
             cid=f"DEMO-CLAIM-{n:03d}"; change=n in (3,7,11,16); conflict=n in (7,14); pending=n in (3,6,7,11,14,16)
-            geom=polygon(80.25+(n%5)*.012,22.15+(n//5)*.012)
+            state,district,village,longitude,latitude=locations[(n-1)%len(locations)]
+            group=(n-1)//len(locations)
+            geom=polygon(longitude+(group*.18),latitude+(group*.13),.10)
             timeline=[self.timeline(cid,"APPLICATION_RECEIVED",iso(220-n*3),"APPLICATION","Application received."),self.timeline(cid,"DOCUMENT_REVIEWED",iso(130-n*2),"DOCUMENT_REVIEW","Documents reviewed.")]
             if n % 3: timeline.append(self.timeline(cid,"SITE_VERIFICATION",iso(30+n),"SITE_VERIFICATION","Site review queued or completed."))
             community=[] if not conflict else [{"review_id":f"CR-{n}","claim_id":cid,"reviewer_role":"COMMUNITY_REVIEWER","action":"REPORT_CONFLICT","statement":"Synthetic contextual conflict for human review.","evidence_reference":None,"submitted_at":iso(20),"visibility":"AUTHORIZED"}]
@@ -32,7 +47,7 @@ class DemoRepository:
             completeness=55 if pending else 85; inactive_days=120 if pending else 18
             if n in (3,6): completeness=85 if n==3 else 55; inactive_days=18
             priority="REQUIRES_VERIFICATION" if change else ("HIGH" if pending else ("MEDIUM" if n%3==0 else "LOW"))
-            self.claims[cid]={"claim_id":cid,"case_id":cid,"claimant_reference":f"SYNTHETIC-REF-{n:03d}","claim_type":"COMMUNITY" if n%4==0 else "INDIVIDUAL","village":f"Demo Village {n}","gram_panchayat":f"Demo Panchayat {(n-1)//4+1}","district":"Demo District","state":states[n%len(states)],"area_hectares":round(1.1+(n*.17),2),"status":statuses[n%len(statuses)],"priority":priority,"verification_status":verification[0]['result'] if verification else "NOT_REQUIRED","community_review_status":community[0]['action'] if community else "NOT_REVIEWED","evidence_completeness":completeness,"workflow_inactivity_benchmark_days":90,"created_at":iso(220-n*3),"updated_at":iso(n+2),"geometry":geom,"is_active":True,"data_label":"DEMO DATA","days_since_last_action":inactive_days,"timeline":timeline,"evidence":evidence,"provenance":[provenance],"change_detection":detection,"field_verification":verification,"community_reviews":community,"ledger":[],"anomalies":[]}
+            self.claims[cid]={"claim_id":cid,"case_id":cid,"claimant_reference":f"SYNTHETIC-REF-{n:03d}","claim_type":"COMMUNITY" if n%4==0 else "INDIVIDUAL","village":village,"gram_panchayat":f"Demo Panchayat {(n-1)//4+1}","district":district,"state":state,"latitude":latitude+(group*.13)+.05,"longitude":longitude+(group*.18)+.05,"area_hectares":round(1.1+(n*.17),2),"status":statuses[n%len(statuses)],"priority":priority,"verification_status":verification[0]['result'] if verification else "NOT_REQUIRED","community_review_status":community[0]['action'] if community else "NOT_REVIEWED","evidence_completeness":completeness,"workflow_inactivity_benchmark_days":90,"created_at":iso(220-n*3),"updated_at":iso(n+2),"geometry":geom,"is_active":True,"data_label":"DEMO DATA","days_since_last_action":inactive_days,"timeline":timeline,"evidence":evidence,"provenance":[provenance],"change_detection":detection,"field_verification":verification,"community_reviews":community,"ledger":[],"anomalies":[]}
             self.append_ledger(cid,{"event_type":"CLAIM_APPLICATION","actor":"SYSTEM_DEMO","source":"CLAIM","description":"Synthetic demo claim fixture initialized.","provenance_reference":provenance['provenance_id']})
             self.append_ledger(cid,{"event_type":"DOCUMENT","actor":"SYSTEM_DEMO","source":"CLAIM","evidence_reference":evidence[0]['evidence_id'],"description":"Synthetic demo application record added.","provenance_reference":provenance['provenance_id']})
             if change: self.append_ledger(cid,{"event_type":"SATELLITE_CHANGE","actor":"SYSTEM_DEMO","source":"SATELLITE_CHANGE","evidence_reference":evidence[-1]['evidence_id'],"description":"Synthetic possible-change observation recorded.","provenance_reference":provenance['provenance_id']})
