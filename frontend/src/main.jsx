@@ -14,7 +14,7 @@ import ModulePage from './components/ModulePage'
 import SettingsPage from './components/SettingsPage'
 import { loadPreferences, savePreferences } from './components/preferences'
 
-const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const API = import.meta.env.VITE_API_URL || 'http://fra-ai-decision-support.vercel.app'
 function readRoute() {
   const rawPath = location.hash.replace(/^#/, '') || '/'; const [path, query = ''] = rawPath.split('?'); const caseMatch = path.match(/^\/cases\/([^/]+)$/)
   if (caseMatch) return { name: 'case-details', claimId: decodeURIComponent(caseMatch[1]) }
