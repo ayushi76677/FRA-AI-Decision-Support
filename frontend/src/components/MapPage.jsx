@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getJson } from './api'
 import MapView from './MapView'
-import { PageTitle } from './CasesPage'
-export default function MapPage({ api, onOpenCase }) { const [claim,setClaim]=useState(),[error,setError]=useState(''); useEffect(()=>{getJson(api,'/api/claims?page_size=1').then(data=>setClaim(data.items?.[0])).catch(()=>setError('The evidence map needs a claim record from the local API.'))},[api]); return <main className="content-page"><PageTitle eyebrow="SPATIAL EVIDENCE" title="Evidence map" text="Map layers and all geometries shown here are synthetic demo data for review workflows."/>{error&&<div className="error">{error}</div>}<section className="panel map-panel"><div className="panel-head"><div><h2>Interactive evidence layers</h2><p className="muted">Select a claim geometry for its details and case record.</p></div><span className="tag">Human review required</span></div>{claim?<MapView claim={claim} api={api} onOpenCase={onOpenCase}/>:!error&&<p className="empty">Loading map data…</p>}</section></main> }
+export default function MapPage({ api, onOpenCase, focusClaimId }) {
+  return <main className="map-dashboard" aria-label="India evidence map"><MapView api={api} onOpenCase={onOpenCase} focusClaimId={focusClaimId}/></main>
+}
