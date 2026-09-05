@@ -14,7 +14,10 @@ import ModulePage from './components/ModulePage'
 import SettingsPage from './components/SettingsPage'
 import { loadPreferences, savePreferences } from './components/preferences'
 
-const API = import.meta.env.VITE_API_BASE_URL || 'http://fra-ai-decision-support.vercel.app'
+// In the Render deployment, FastAPI serves this built frontend and the API from
+// the same public origin.  An empty base keeps every request relative to that
+// origin instead of sending public visitors to their own localhost.
+const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '')
 function readRoute() {
   const rawPath = location.hash.replace(/^#/, '') || '/'; const [path, query = ''] = rawPath.split('?'); const caseMatch = path.match(/^\/cases\/([^/]+)$/)
   if (caseMatch) return { name: 'case-details', claimId: decodeURIComponent(caseMatch[1]) }
